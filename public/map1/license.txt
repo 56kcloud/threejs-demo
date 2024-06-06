@@ -1,0 +1,11 @@
+Model Information:
+* title:	untitled
+* source:	https://sketchfab.com/3d-models/untitled-420c8787c2cd49f3bc27e705090d2624
+* author:	Mikey x pc (https://sketchfab.com/mikeyxpc)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "untitled" (https://sketchfab.com/3d-models/untitled-420c8787c2cd49f3bc27e705090d2624) by Mikey x pc (https://sketchfab.com/mikeyxpc) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
