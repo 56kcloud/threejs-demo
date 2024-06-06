@@ -1,113 +1,214 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+import { Suspense, useEffect, useRef, useState } from "react";
+import * as THREE from "three"; // module 3D principale
+import { Canvas } from "@react-three/fiber"; // permet d'utiliser three.js avec react
+import { Gltf, Html, KeyboardControls, Sky, useProgress } from "@react-three/drei"; // "extension" de @react-three/fiber, comporte les add-ons de three.js et plus
+import { EffectComposer, Bloom } from "@react-three/postprocessing"; // module postprocessing pour @react-three/fiber (effets graphiques)
+import { Physics, RigidBody } from "@react-three/rapier"; // Module de physique avec rapier.js concu pour react-three/fiber
+import { Perf } from "r3f-perf"; // Module pour afficher les performances
+import Ecctrl, { EcctrlAnimation, EcctrlJoystick, useGame } from "ecctrl"; // Module de controle du personnage (sur la base de @react-three/rapier)
+import Shader from "./shader"; // import du shader
+import Ennemy from "./ennemy"; // import du monstre
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+// Attribue les touches du clavier au actions (avancer, sauter, attaquer...)
+const keyboardMap = [
+  { name: "forward", keys: ["ArrowUp", "KeyW"] },
+  { name: "backward", keys: ["ArrowDown", "KeyS"] },
+  { name: "leftward", keys: ["ArrowLeft", "KeyA"] },
+  { name: "rightward", keys: ["ArrowRight", "KeyD"] },
+  { name: "run", keys: ["Shift"] },
+  { name: "jump", keys: ["Space"] },
+  { name: "action1", keys: ["KeyF"] },
+];
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+// Attribue les animations du model au actions
+const animationSet = {
+  idle: "rig|Idel",
+  walk: "rig|Walck",
+  run: "rig|Run",
+  jump: "rig|Idel",
+  jumpIdle: "rig|Walck",
+  jumpLand: "rig|Idel",
+  fall: "rig|Idel",
+  action1: "rig|Attack_1",
+};
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
+// Retourn une valeur aleatoire à l'interieur de l'arene
+const random = () => {
+    const pos = Math.random() < 0.5 ? 1 : -1;
+    const val = Math.random() * 12;
+    return pos * val
 }
+
+const Scene: React.FC = () => {
+    // Initialise l'animation du model
+    const initAnimationSet = useGame((s) => s.initializeAnimationSet);
+
+    useEffect(() => {
+        // Initialise l'animation du model
+        initAnimationSet(animationSet);
+
+        // Sers à utiliser le click de la souris pour l'attaque (fonctionne pas)
+        const attackEvent = () => {
+            const event = new KeyboardEvent("keydown", {
+                key: "f",
+                code: "KeyF",
+                keyCode: 70,
+                which: 70,
+                bubbles: true,
+                cancelable: true
+            });
+
+            document.dispatchEvent(event);
+        }
+
+        window.addEventListener("mousedown", attackEvent);
+
+        return () => {
+            window.removeEventListener("mousedown", attackEvent);
+        }
+    }, []);
+
+    // Création d'une lumière qui éclaire toute l'arene
+    const spotLight = new THREE.SpotLight(0xffffff, 3000);
+    spotLight.position.set(-20, 20, -20);
+    spotLight.angle = Math.PI / 4;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1.9;
+    spotLight.castShadow = true;
+    spotLight.shadow.bias = -0.0001;
+    spotLight.shadow.mapSize.width = 1024;
+    spotLight.shadow.mapSize.height = 1024;
+    spotLight.shadow.radius = 8;
+
+    return (
+        <Physics timeStep="vary"> {/* Contexte pour pour ajouter la physique au objet */}
+
+            {/* Lumière ambiante pour éclairer toute l'arene sans les ombres */}
+            <ambientLight color={0xffcccc} />
+            
+            {/* Ajout de la lumière spotLight */}
+            <primitive object={spotLight} />
+
+            {/* Ciel bleu avec le soleil */}
+            <Sky distance={450000} turbidity={1} inclination={1} />
+
+            {/* Affiche la fenêtre de debug (GPU, CPU, fps...) */}
+            <Perf position="top-right" />
+
+            {/* Création des effets de postprocessing */}
+            <EffectComposer enableNormalPass>
+                {/* Bloom ajoute du réalisme au objet lumineux */}
+                <Bloom opacity={0.05} />
+
+                {/* Effet chromatique ou pixelisé, à tester */}
+                {/* <ChromaticAberration offset={new THREE.Vector2(0.005, 0.005)} blendFunction={BlendFunction.OVERLAY} radialModulation={false} modulationOffset={0} /> */}
+                {/* <Pixelation /> */}
+            </EffectComposer>
+
+            {/* Utilisation du clavier pour controler le personnage */}
+            <KeyboardControls map={keyboardMap}>
+                {/* Module principale pour controler le personnage */}
+                <Ecctrl
+                    camInitDis={-3}
+                    camMaxDis={-3}
+                    camMinDis={-3}
+                    turnSpeed={10}
+                    turnVelMultiplier={1}
+                    jumpVel={4}
+                    maxVelLimit={4}
+                    sprintMult={2}
+                    camMoveSpeed={0.75}
+                    animated
+                >
+                    {/* Module pour animer le personnage selon les actions */}
+                    <EcctrlAnimation characterURL="/player/scene.gltf" animationSet={animationSet}>
+                        {/* <Player position={[0, -0.9, 0]} scale={1} /> */}
+                        {/* Affiche le personnage, fichier gltf -> /public/player/scene.gltf, téléchargé sur https://sketchfab.com/ */}
+                        <Gltf src="/player/scene.gltf" position={[0, -0.9, 0]} scale={1} castShadow receiveShadow />
+                    </EcctrlAnimation>
+                </Ecctrl>
+            </KeyboardControls>
+
+            {/* Utilise RigidBody pour ajouter la physique à l'arene (utiliser colliders="trimesh" pour les fichier 3D) */}
+            <RigidBody colliders="trimesh" type="fixed" position={[0, -5, 0]} scale={1}>
+                <Gltf src="/map/scene.gltf" receiveShadow castShadow />
+            </RigidBody>
+
+            {/* Créer 10 cubes aleatoirement avec une texture perso, fichier jpeg -> /public/box.jpeg */}
+            {Array.from({ length: 10 }).map((_, i) => (
+                <RigidBody key={i} colliders="cuboid" position={[random(), -11, random()]} >
+                    <mesh castShadow receiveShadow>
+                        <boxGeometry args={[1, 1, 1]} />
+                        <meshBasicMaterial map={new THREE.TextureLoader().load("/box.jpeg")} />
+                    </mesh>
+                </RigidBody>
+            ))}
+            
+            {/* Affiche le monstre aléatoirement */}
+            <Ennemy position={new THREE.Vector3(random(), -12, random())} />
+
+            {/* Affiche le shader, (lave au milieu) */}
+            <Shader />
+
+            {/* Groupe pour la sphere verte et le cube d'eau */}
+            <group position={[0, -11, 12]}>
+                <mesh position={[0, 0, 0]} castShadow>
+                    <boxGeometry args={[1, 1, 1]} />
+                    <meshBasicMaterial map={new THREE.TextureLoader().load("/water.jpg")} />
+                </mesh>
+
+                <mesh position={[2, 0, 0]} castShadow>
+                    <sphereGeometry args={[1, 5, 5]} />
+                    <meshLambertMaterial color={0x00ff00} wireframe /> {/* wireframe pour afficher uniquement les bordures */}
+                </mesh>
+            </group>
+
+        </Physics>
+    );
+}
+
+const Page: React.FC = () => {
+    const [started, setStarted] = useState<boolean>(false);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    return (
+        <div className="w-screen h-screen">
+            {/* {!started && <Home canvas={canvasRef.current} setStarted={setStarted} />} */}
+
+
+            {/* Les joysticks pour mobile */}
+            <EcctrlJoystick buttonNumber={5} />
+
+            {/* Affiche le canvas (le monde 3D) et demande l'accès au pointeur */}
+            <Canvas
+                ref={canvasRef}
+                gl={{ antialias: false, powerPreference: "high-performance", stencil: false, depth: false }}
+                onPointerDown={() => canvasRef.current?.requestPointerLock()}
+                shadows
+            >
+                {/* Suspense permet d'attendre le chargement de toute la scene */}
+                <Suspense fallback={null}>
+                    <Scene />
+                </Suspense>
+            </Canvas>
+        </div>
+    );
+}
+
+const Home: React.FC<{ canvas: HTMLCanvasElement, setStarted: React.Dispatch<React.SetStateAction<boolean>> }> = ({ canvas, setStarted }) => {
+    const start = () => {
+        canvas.requestPointerLock();
+        setStarted(true);
+    }
+
+    return (
+        <div className="fixed inset-0 z-40 w-screen h-screen flex items-center justify-center flex-col gap-y-20" style={{ backgroundImage: "url(/home.png)", backgroundSize: "cover", backgroundPosition: "center" }} >
+            <h1 className="text-9xl font-bold">Three.js Demo</h1>
+            {canvas ? <button className="btn btn-lg btn-wide" onClick={start}>Start</button> : <span className="loading loading-spinner loading-lg"></span>}
+        </div>
+    );
+}
+
+export default Page;

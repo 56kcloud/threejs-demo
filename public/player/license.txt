@@ -1,0 +1,11 @@
+Model Information:
+* title:	Skelet_warrior
+* source:	https://sketchfab.com/3d-models/skelet-warrior-1337edb8b567486aa22f15b519e60c4d
+* author:	EvgeshQa (https://sketchfab.com/uchaikineugene)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Skelet_warrior" (https://sketchfab.com/3d-models/skelet-warrior-1337edb8b567486aa22f15b519e60c4d) by EvgeshQa (https://sketchfab.com/uchaikineugene) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
