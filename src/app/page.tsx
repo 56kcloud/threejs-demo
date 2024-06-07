@@ -3,9 +3,9 @@
 import { Suspense, useEffect, useRef } from "react";
 import * as THREE from "three"; // 3D package
 import { Canvas } from "@react-three/fiber"; // Can use three.js in react
-import { Gltf, Html, KeyboardControls, Sky, Trail, useProgress } from "@react-three/drei"; // "extension" of @react-three/fiber, got add-ons of three.js and more
-import { EffectComposer, Bloom, Selection, Outline, Pixelation, Select } from "@react-three/postprocessing"; // postprocessing package for @react-three/fiber
-import { Physics, RapierRigidBody, RigidBody } from "@react-three/rapier"; // Physics package with rapier.js made for react-three/fiber
+import { Gltf, KeyboardControls, Sky } from "@react-three/drei"; // "extension" of @react-three/fiber, got add-ons of three.js and more
+import { EffectComposer, Bloom, Selection, Outline, Select } from "@react-three/postprocessing"; // postprocessing package for @react-three/fiber
+import { Physics, RigidBody } from "@react-three/rapier"; // Physics package with rapier.js made for react-three/fiber
 import { Perf } from "r3f-perf"; // Package for performance
 import Ecctrl, { EcctrlAnimation, EcctrlJoystick, useGame } from "ecctrl"; // Package to control character (based on @react-three/rapier)
 import Shader from "./shader"; // import shader

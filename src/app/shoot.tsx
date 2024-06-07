@@ -2,8 +2,10 @@ import * as THREE from "three";
 import { RapierRigidBody, RigidBody } from "@react-three/rapier";
 import { useRef, useMemo, useState, useEffect } from "react";
 import { Trail } from "@react-three/drei";
+import { useThree } from "@react-three/fiber";
 
 const ShotCube: React.FC<{ player: React.MutableRefObject<THREE.Group> }> = ({ player }) => {
+    const { camera } = useThree();
     const [cubeMesh, setCubeMesh] = useState<JSX.Element[]>([]);
     const cubeRef = useRef<RapierRigidBody>(null!);
 
@@ -16,14 +18,14 @@ const ShotCube: React.FC<{ player: React.MutableRefObject<THREE.Group> }> = ({ p
             const camQuat = player.current.getWorldQuaternion(new THREE.Quaternion());
             
             const d = 2;
-            const v = new THREE.Vector3(0, 0, 0.2);
+            const v = new THREE.Vector3(0, 0, 0.5);
             v.applyQuaternion(camQuat);
             v.multiplyScalar(d);
             position.copy(camPos).add(v);
     
             const newMesh = (
                 <mesh
-                    position={[position.x, position.y + .3, position.z]}
+                    position={[position.x, position.y + .1, position.z]}
                     scale={0.5}
                     castShadow
                     receiveShadow
