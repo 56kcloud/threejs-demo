@@ -3,13 +3,14 @@
 import { Suspense, useEffect, useRef } from "react";
 import * as THREE from "three"; // 3D package
 import { Canvas } from "@react-three/fiber"; // Can use three.js in react
-import { Gltf, Html, KeyboardControls, Sky, useProgress } from "@react-three/drei"; // "extension" of @react-three/fiber, got add-ons of three.js and more
+import { Gltf, Html, KeyboardControls, Sky, Trail, useProgress } from "@react-three/drei"; // "extension" of @react-three/fiber, got add-ons of three.js and more
 import { EffectComposer, Bloom, Selection, Outline, Pixelation, Select } from "@react-three/postprocessing"; // postprocessing package for @react-three/fiber
-import { Physics, RigidBody } from "@react-three/rapier"; // Physics package with rapier.js made for react-three/fiber
+import { Physics, RapierRigidBody, RigidBody } from "@react-three/rapier"; // Physics package with rapier.js made for react-three/fiber
 import { Perf } from "r3f-perf"; // Package for performance
 import Ecctrl, { EcctrlAnimation, EcctrlJoystick, useGame } from "ecctrl"; // Package to control character (based on @react-three/rapier)
 import Shader from "./shader"; // import shader
 import Ennemy from "./ennemy"; // import monstere
+import ShotCube from "./shoot";
 
 // Set keys to actions (go forward, jump, attack...)
 const keyboardMap = [
@@ -42,24 +43,18 @@ const random = () => {
 }
 
 const Scene: React.FC = () => {
+    const player = useRef<THREE.Group>(null!);
+
     const initAnimationSet = useGame((s) => s.initializeAnimationSet);
+    const attack = useGame((s) => s.action1!);
 
     useEffect(() => {
         // Initialize the animation of the character
         initAnimationSet(animationSet);
 
-        // Use left click on the mouse to attack (doesn't work)
+        // Use left click on the mouse to attack
         const attackEvent = () => {
-            const event = new KeyboardEvent("keydown", {
-                key: "f",
-                code: "KeyF",
-                keyCode: 70,
-                which: 70,
-                bubbles: true,
-                cancelable: true
-            });
-
-            document.dispatchEvent(event);
+            attack();
         }
 
         window.addEventListener("mousedown", attackEvent);
@@ -125,9 +120,10 @@ const Scene: React.FC = () => {
                 >
                     {/* Packages to animate the character */}
                     <EcctrlAnimation characterURL="/player/scene.gltf" animationSet={animationSet}>
-                        {/* <Player position={[0, -0.9, 0]} scale={1} /> */}
-                        {/* Display the character, gltf file -> /public/player/scene.gltf, downloaded on https://sketchfab.com/ */}
-                        <Gltf src="/player/scene.gltf" position={[0, -0.9, 0]} scale={1} castShadow receiveShadow />
+                        <group ref={player}>
+                            {/* Display the character, gltf file -> /public/player/scene.gltf, downloaded on https://sketchfab.com/ */}
+                            <Gltf src="/player/scene.gltf" position={[0, -0.9, 0]} scale={1} castShadow receiveShadow />
+                        </group>
                     </EcctrlAnimation>
                 </Ecctrl>
             </KeyboardControls>
@@ -150,7 +146,7 @@ const Scene: React.FC = () => {
             {/* Display the monster */}
             <Selection>
                 <EffectComposer autoClear={false}>
-                    <Pixelation />
+                    <Outline blur />
                 </EffectComposer>
                 <Select enabled>
                     <Ennemy position={new THREE.Vector3(random(), -12, random())} />
@@ -159,6 +155,9 @@ const Scene: React.FC = () => {
 
             {/* Display a lava shader (at the center) */}
             <Shader />
+
+            {/* Shoot blue sphere */}
+            <ShotCube player={player} />
 
             {/* Group for green sphere and water cube */}
             {/* <group position={[0, -11, 12]}>
