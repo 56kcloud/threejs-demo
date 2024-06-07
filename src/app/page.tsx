@@ -46,22 +46,10 @@ const Scene: React.FC = () => {
     const player = useRef<THREE.Group>(null!);
 
     const initAnimationSet = useGame((s) => s.initializeAnimationSet);
-    const attack = useGame((s) => s.action1!);
 
     useEffect(() => {
         // Initialize the animation of the character
         initAnimationSet(animationSet);
-
-        // Use left click on the mouse to attack
-        const attackEvent = () => {
-            attack();
-        }
-
-        window.addEventListener("mousedown", attackEvent);
-
-        return () => {
-            window.removeEventListener("mousedown", attackEvent);
-        }
     }, []);
 
     // Create a light that light all the scene with shadows
@@ -142,7 +130,27 @@ const Scene: React.FC = () => {
                     </mesh>
                 </RigidBody>
             ))}
-            
+
+            {/* Cube tower */}
+            <RigidBody position={[0, -11, 0]}>
+                <mesh castShadow receiveShadow>
+                    <boxGeometry args={[1, 1, 1]} />
+                    <meshBasicMaterial map={new THREE.TextureLoader().load("/box.jpeg")} />
+                </mesh>
+            </RigidBody>
+            <RigidBody position={[0, -10, 0]}>
+                <mesh castShadow receiveShadow>
+                    <boxGeometry args={[1, 1, 1]} />
+                    <meshBasicMaterial map={new THREE.TextureLoader().load("/box.jpeg")} />
+                </mesh>
+            </RigidBody>
+            <RigidBody position={[0, -9, 0]}>
+                <mesh castShadow receiveShadow>
+                    <boxGeometry args={[1, 1, 1]} />
+                    <meshBasicMaterial map={new THREE.TextureLoader().load("/box.jpeg")} />
+                </mesh>
+            </RigidBody>
+
             {/* Display the monster */}
             <Selection>
                 <EffectComposer autoClear={false}>
