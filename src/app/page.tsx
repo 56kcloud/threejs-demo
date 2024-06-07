@@ -1,17 +1,17 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
-import * as THREE from "three"; // module 3D principale
-import { Canvas } from "@react-three/fiber"; // permet d'utiliser three.js avec react
-import { Gltf, Html, KeyboardControls, Sky, useProgress } from "@react-three/drei"; // "extension" de @react-three/fiber, comporte les add-ons de three.js et plus
-import { EffectComposer, Bloom } from "@react-three/postprocessing"; // module postprocessing pour @react-three/fiber (effets graphiques)
-import { Physics, RigidBody } from "@react-three/rapier"; // Module de physique avec rapier.js concu pour react-three/fiber
-import { Perf } from "r3f-perf"; // Module pour afficher les performances
-import Ecctrl, { EcctrlAnimation, EcctrlJoystick, useGame } from "ecctrl"; // Module de controle du personnage (sur la base de @react-three/rapier)
-import Shader from "./shader"; // import du shader
-import Ennemy from "./ennemy"; // import du monstre
+import { Suspense, useEffect, useRef } from "react";
+import * as THREE from "three"; // 3D package
+import { Canvas } from "@react-three/fiber"; // Can use three.js in react
+import { Gltf, Html, KeyboardControls, Sky, useProgress } from "@react-three/drei"; // "extension" of @react-three/fiber, got add-ons of three.js and more
+import { EffectComposer, Bloom, Selection, Outline, Pixelation, Select } from "@react-three/postprocessing"; // postprocessing package for @react-three/fiber
+import { Physics, RigidBody } from "@react-three/rapier"; // Physics package with rapier.js made for react-three/fiber
+import { Perf } from "r3f-perf"; // Package for performance
+import Ecctrl, { EcctrlAnimation, EcctrlJoystick, useGame } from "ecctrl"; // Package to control character (based on @react-three/rapier)
+import Shader from "./shader"; // import shader
+import Ennemy from "./ennemy"; // import monstere
 
-// Attribue les touches du clavier au actions (avancer, sauter, attaquer...)
+// Set keys to actions (go forward, jump, attack...)
 const keyboardMap = [
   { name: "forward", keys: ["ArrowUp", "KeyW"] },
   { name: "backward", keys: ["ArrowDown", "KeyS"] },
@@ -22,7 +22,7 @@ const keyboardMap = [
   { name: "action1", keys: ["KeyF"] },
 ];
 
-// Attribue les animations du model au actions
+// Set animations to actions
 const animationSet = {
   idle: "rig|Idel",
   walk: "rig|Walck",
@@ -34,7 +34,7 @@ const animationSet = {
   action1: "rig|Attack_1",
 };
 
-// Retourn une valeur aleatoire à l'interieur de l'arene
+// Return a random position inside the arena
 const random = () => {
     const pos = Math.random() < 0.5 ? 1 : -1;
     const val = Math.random() * 12;
@@ -42,14 +42,13 @@ const random = () => {
 }
 
 const Scene: React.FC = () => {
-    // Initialise l'animation du model
     const initAnimationSet = useGame((s) => s.initializeAnimationSet);
 
     useEffect(() => {
-        // Initialise l'animation du model
+        // Initialize the animation of the character
         initAnimationSet(animationSet);
 
-        // Sers à utiliser le click de la souris pour l'attaque (fonctionne pas)
+        // Use left click on the mouse to attack (doesn't work)
         const attackEvent = () => {
             const event = new KeyboardEvent("keydown", {
                 key: "f",
@@ -70,7 +69,7 @@ const Scene: React.FC = () => {
         }
     }, []);
 
-    // Création d'une lumière qui éclaire toute l'arene
+    // Create a light that light all the scene with shadows
     const spotLight = new THREE.SpotLight(0xffffff, 3000);
     spotLight.position.set(-20, 20, -20);
     spotLight.angle = Math.PI / 4;
@@ -78,38 +77,40 @@ const Scene: React.FC = () => {
     spotLight.decay = 1.9;
     spotLight.castShadow = true;
     spotLight.shadow.bias = -0.0001;
-    spotLight.shadow.mapSize.width = 1024;
-    spotLight.shadow.mapSize.height = 1024;
     spotLight.shadow.radius = 8;
+    spotLight.shadow.mapSize.width = 2048;
+    spotLight.shadow.mapSize.height = 2048;
+    spotLight.shadow.camera.near = 0.5;
+    spotLight.shadow.camera.far = 500;
 
     return (
-        <Physics timeStep="vary"> {/* Contexte pour pour ajouter la physique au objet */}
+        <Physics timeStep="vary"> {/* Context for using physics */}
 
-            {/* Lumière ambiante pour éclairer toute l'arene sans les ombres */}
+            {/* Ambient light to light up the scene */}
             <ambientLight color={0xffcccc} />
             
-            {/* Ajout de la lumière spotLight */}
+            {/* Add spotLight */}
             <primitive object={spotLight} />
 
-            {/* Ciel bleu avec le soleil */}
+            {/* Blue sky with sun */}
             <Sky distance={450000} turbidity={1} inclination={1} />
 
-            {/* Affiche la fenêtre de debug (GPU, CPU, fps...) */}
+            {/* Display debug window (GPU, CPU, fps...) */}
             <Perf position="top-right" />
 
             {/* Création des effets de postprocessing */}
             <EffectComposer enableNormalPass>
-                {/* Bloom ajoute du réalisme au objet lumineux */}
+                {/* Add bloom to luminous object */}
                 <Bloom opacity={0.05} />
 
-                {/* Effet chromatique ou pixelisé, à tester */}
+                {/* Chromatic ou pixelated effect */}
                 {/* <ChromaticAberration offset={new THREE.Vector2(0.005, 0.005)} blendFunction={BlendFunction.OVERLAY} radialModulation={false} modulationOffset={0} /> */}
                 {/* <Pixelation /> */}
             </EffectComposer>
 
-            {/* Utilisation du clavier pour controler le personnage */}
+            {/* use the keyboard to move the character */}
             <KeyboardControls map={keyboardMap}>
-                {/* Module principale pour controler le personnage */}
+                {/* Package to control the character */}
                 <Ecctrl
                     camInitDis={-3}
                     camMaxDis={-3}
@@ -122,21 +123,21 @@ const Scene: React.FC = () => {
                     camMoveSpeed={0.75}
                     animated
                 >
-                    {/* Module pour animer le personnage selon les actions */}
+                    {/* Packages to animate the character */}
                     <EcctrlAnimation characterURL="/player/scene.gltf" animationSet={animationSet}>
                         {/* <Player position={[0, -0.9, 0]} scale={1} /> */}
-                        {/* Affiche le personnage, fichier gltf -> /public/player/scene.gltf, téléchargé sur https://sketchfab.com/ */}
+                        {/* Display the character, gltf file -> /public/player/scene.gltf, downloaded on https://sketchfab.com/ */}
                         <Gltf src="/player/scene.gltf" position={[0, -0.9, 0]} scale={1} castShadow receiveShadow />
                     </EcctrlAnimation>
                 </Ecctrl>
             </KeyboardControls>
 
-            {/* Utilise RigidBody pour ajouter la physique à l'arene (utiliser colliders="trimesh" pour les fichier 3D) */}
+            {/* Use RigidBody to add physics to the arena (use colliders="trimesh" for 3D files like GLTF) */}
             <RigidBody colliders="trimesh" type="fixed" position={[0, -5, 0]} scale={1}>
                 <Gltf src="/map/scene.gltf" receiveShadow castShadow />
             </RigidBody>
 
-            {/* Créer 10 cubes aleatoirement avec une texture perso, fichier jpeg -> /public/box.jpeg */}
+            {/* Create 10 cubes with random position with wood texture, fichier jpeg -> /public/box.jpeg */}
             {Array.from({ length: 10 }).map((_, i) => (
                 <RigidBody key={i} colliders="cuboid" position={[random(), -11, random()]} >
                     <mesh castShadow receiveShadow>
@@ -146,14 +147,21 @@ const Scene: React.FC = () => {
                 </RigidBody>
             ))}
             
-            {/* Affiche le monstre aléatoirement */}
-            <Ennemy position={new THREE.Vector3(random(), -12, random())} />
+            {/* Display the monster */}
+            <Selection>
+                <EffectComposer autoClear={false}>
+                    <Pixelation />
+                </EffectComposer>
+                <Select enabled>
+                    <Ennemy position={new THREE.Vector3(random(), -12, random())} />
+                </Select>
+            </Selection>
 
-            {/* Affiche le shader, (lave au milieu) */}
+            {/* Display a lava shader (at the center) */}
             <Shader />
 
-            {/* Groupe pour la sphere verte et le cube d'eau */}
-            <group position={[0, -11, 12]}>
+            {/* Group for green sphere and water cube */}
+            {/* <group position={[0, -11, 12]}>
                 <mesh position={[0, 0, 0]} castShadow>
                     <boxGeometry args={[1, 1, 1]} />
                     <meshBasicMaterial map={new THREE.TextureLoader().load("/water.jpg")} />
@@ -161,52 +169,36 @@ const Scene: React.FC = () => {
 
                 <mesh position={[2, 0, 0]} castShadow>
                     <sphereGeometry args={[1, 5, 5]} />
-                    <meshLambertMaterial color={0x00ff00} wireframe /> {/* wireframe pour afficher uniquement les bordures */}
+                    <meshLambertMaterial color={0x00ff00} wireframe />
                 </mesh>
-            </group>
+            </group> */}
 
         </Physics>
     );
 }
 
 const Page: React.FC = () => {
-    const [started, setStarted] = useState<boolean>(false);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     return (
         <div className="w-screen h-screen">
-            {/* {!started && <Home canvas={canvasRef.current} setStarted={setStarted} />} */}
 
-
-            {/* Les joysticks pour mobile */}
+            {/* Joystick for mobile */}
             <EcctrlJoystick buttonNumber={5} />
 
-            {/* Affiche le canvas (le monde 3D) et demande l'accès au pointeur */}
+            {/* Dosplay the canvas and request pointer lock */}
             <Canvas
                 ref={canvasRef}
                 gl={{ antialias: false, powerPreference: "high-performance", stencil: false, depth: false }}
+                camera={{  }}
                 onPointerDown={() => canvasRef.current?.requestPointerLock()}
                 shadows
             >
-                {/* Suspense permet d'attendre le chargement de toute la scene */}
+                {/* Suspense wait till everything is loaded */}
                 <Suspense fallback={null}>
                     <Scene />
                 </Suspense>
             </Canvas>
-        </div>
-    );
-}
-
-const Home: React.FC<{ canvas: HTMLCanvasElement, setStarted: React.Dispatch<React.SetStateAction<boolean>> }> = ({ canvas, setStarted }) => {
-    const start = () => {
-        canvas.requestPointerLock();
-        setStarted(true);
-    }
-
-    return (
-        <div className="fixed inset-0 z-40 w-screen h-screen flex items-center justify-center flex-col gap-y-20" style={{ backgroundImage: "url(/home.png)", backgroundSize: "cover", backgroundPosition: "center" }} >
-            <h1 className="text-9xl font-bold">Three.js Demo</h1>
-            {canvas ? <button className="btn btn-lg btn-wide" onClick={start}>Start</button> : <span className="loading loading-spinner loading-lg"></span>}
         </div>
     );
 }

@@ -55,8 +55,8 @@ const Shader = () => {
     });
 
     return (
-        <mesh position={[0, -12, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[1, 0.4, 16, 100]} />
+        <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <sphereGeometry args={[1, 0.4, 16, 100]} />
             {/* @ts-ignore */}
             <lavaMaterial ref={ref} texture1={texture1} texture2={texture2} />
         </mesh>
